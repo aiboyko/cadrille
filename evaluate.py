@@ -54,8 +54,8 @@ def compute_iou(gt_mesh, pred_mesh):
         pass
 
 
-def compound_to_mesh(compound):
-    vertices, faces = compound.tessellate(0.001, 0.1)
+def compound_to_mesh(compound, tolerance=0.001, angularTolerance=0.05):
+    vertices, faces = compound.tessellate(tolerance, angularTolerance)
     return trimesh.Trimesh([(v.x, v.y, v.z) for v in vertices], faces)
 
 
@@ -113,11 +113,25 @@ def run_cd_single(py_file_name, pred_py_path, pred_mesh_path, pred_brep_path, gt
     return dict(file_name=eval_file_name, id=index, cd=cd, iou=iou)
 
 
-def run(gt_mesh_path, pred_py_path, n_points):
-    pred_mesh_path = os.path.join(os.path.dirname(pred_py_path), 'tmp_mesh')
-    pred_brep_path = os.path.join(os.path.dirname(pred_py_path), 'tmp_brep')
-    best_names_path = os.path.join(os.path.dirname(pred_py_path), 'tmp.txt')
+def run(gt_mesh_path, pred_py_path, n_points, n_parallel=24):
+    #pred_py_path is ../output/py_files/current_class
+    
+    gen_name = os.path.split(pred_py_path)[-1]
+    output_path = os.path.dirname(os.path.dirname(pred_py_path))
+    print(gen_name)
+    print(output_path)
+    
+    pred_mesh_path = os.path.join(output_path,'mesh', gen_name)
+    pred_brep_path = os.path.join(output_path, 'brep', gen_name)
+    best_names_path = os.path.join(output_path, 'names', gen_name)
 
+    print("evaluate.py run()")
+    print("-----")
+    print(gt_mesh_path)
+    print(pred_py_path)
+    print(pred_mesh_path)
+    print("____________________________")
+    
     # should be no predicted meshes from previous experiments
     os.makedirs(pred_mesh_path, exist_ok=True)
     os.makedirs(pred_brep_path, exist_ok=True)
@@ -125,7 +139,7 @@ def run(gt_mesh_path, pred_py_path, n_points):
 
     # compute chamfer distance and iou for each sample
     py_file_names = os.listdir(pred_py_path)
-    with NonDaemonPool(16) as pool:
+    with NonDaemonPool(n_parallel) as pool:
         py_metrics = list(tqdm(pool.imap(
             partial(
                 run_cd_single,
@@ -185,5 +199,6 @@ if __name__ == '__main__':
     parser.add_argument('--gt-mesh-path', type=str, default='./data/deepcad_test_mesh')
     parser.add_argument('--pred-py-path', type=str, default='./work_dirs/tmp_py')
     parser.add_argument('--n-points', type=int, default=8192)
+    parser.add_argument('--n-parallel', type=int, default=24)
     args = parser.parse_args()
-    run(args.gt_mesh_path, args.pred_py_path, args.n_points)
+    run(args.gt_mesh_path, args.pred_py_path, args.n_points, args.n_parallel)
