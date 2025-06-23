@@ -5,3 +5,7 @@ data/text2cad
 data/deepcad_test_mesh
 data/fusion360_test_mesh
 work_dirs
+
+*.stl
+outputs*
+.ipynb_checkpoints
