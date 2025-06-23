@@ -159,12 +159,15 @@ class CadRecodeDataset(Dataset):
     def get_point_cloud(self, item):
         mesh = trimesh.load(os.path.join(self.root_dir, item['mesh_path']))
         mesh = self._augment_pc(mesh)
+        mesh.apply_translation(-(mesh.bounds[0] + mesh.bounds[1]) / 2.0)
+        mesh.apply_scale(2.0 / max(mesh.extents))
+        
         point_cloud = mesh_to_point_cloud(mesh, self.n_points)
         
-        if self.split in ['train', 'val']:
-            point_cloud = point_cloud / self.normalize_std_pc
-        else:
-            point_cloud = (point_cloud - 0.5) * 2
+        # if self.split in ['train', 'val']:
+        #     point_cloud = point_cloud / self.normalize_std_pc
+        # else:
+            #point_cloud = (point_cloud - 0.5) * 2
         
         input_item = {
             'point_cloud': point_cloud,
