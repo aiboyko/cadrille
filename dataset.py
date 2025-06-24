@@ -114,8 +114,15 @@ class CadRecodeDataset(Dataset):
 
         return input_item
 
+    @staticmethod
+    def normalize_mesh(mesh: trimesh.Trimesh):
+        mesh.apply_translation(-(mesh.bounds[0] + mesh.bounds[1]) / 2.0)
+        mesh.apply_scale(2.0 / max(mesh.extents))
+        return mesh
+
     def get_img(self, item):
         mesh = trimesh.load(os.path.join(self.root_dir, item['mesh_path']))
+        mesh = self.normalize_mesh(mesh)
         if self.split in ['train', 'val']:
             mesh.apply_transform(trimesh.transformations.scale_matrix(1 / self.normalize_std_img))
             mesh.apply_transform(trimesh.transformations.translation_matrix([0.5, 0.5, 0.5]))
@@ -159,8 +166,7 @@ class CadRecodeDataset(Dataset):
     def get_point_cloud(self, item):
         mesh = trimesh.load(os.path.join(self.root_dir, item['mesh_path']))
         mesh = self._augment_pc(mesh)
-        mesh.apply_translation(-(mesh.bounds[0] + mesh.bounds[1]) / 2.0)
-        mesh.apply_scale(2.0 / max(mesh.extents))
+        mesh = self.normalize_mesh(mesh)
         
         point_cloud = mesh_to_point_cloud(mesh, self.n_points)
         
