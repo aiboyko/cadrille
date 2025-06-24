@@ -9,7 +9,7 @@ for dir in "$PARENT_DIR"/*/; do
         name_i=$(basename "$dir")
         echo "Processing $name_i..."
         #python test.py --data "$name_i" --output_folder "./outputs/$name_i"
-        python test.py --data-path ../part_sampling_expanded/data/core_mechanical_engineering_dataset/ \
+        python test.py --data-path $PARENT_DIR \
         --split "$name_i" --mode img --n-samples 1 --py-path "./$OUTPUTS_DIR/py_files/$name_i"
     fi
 done
