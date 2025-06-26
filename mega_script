@@ -1,0 +1,33 @@
+# generate gt parts if they don't exist
+# gt folder will be structured like this:
+# - dataset/bearing/1.py
+# - dataset/bearing/1.stl
+# - dataset/bearing/2.py
+# - dataset/bearing/2.stl
+# ...
+# - dataset/bushing/1.py
+# - dataset/bushing/1.stl
+# - dataset/bushing/2.py
+# - dataset/bushing/2.stl
+# ...
+
+GENERATED_PARTS_DIR="/home/jovyan/users/zhemchuzhnikov/boyko/part_sampling_expanded/data/core_mechanical_engineering_dataset/"
+OUTPUTS_DIR=outputs_2
+
+# do the inference of the cadrille model. Create a folder with .py files with cadquery scripts.
+bash run_inference_img.sh 
+
+#run the script to create STL files from the .py files
+bash evaluate_all.sh
+
+#stratify the dataset
+python stratify_cadrille_data.py \
+ -gt ~/Documents/REVERSE_ENG/CAD_DATASETS/cadrille_img/gt \
+ -gen ~/Documents/REVERSE_ENG/CAD_DATASETS/cadrille_img/gen/ \
+ -out /home/ab/Documents/REVERSE_ENG/CAD_DATASETS/cadrille_img_stratified
+
+
+#zip the dataset
+zip -r cadrille_stratified.zip CAD_DATASETS/cadrille_img_stratified
+# import shutil
+# shutil.make_archive("cadrille_dataset", 'zip', "CAD_DATASETS/cadrille_img_stratified")
